@@ -149,3 +149,33 @@ Then:
 ```bash
 python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --only-shotcharts --max-shotchart-players 6
 ```
+
+
+## Version 4.2 fix
+
+This patch fixes the Streamlit Cloud crash:
+
+```text
+pandas.errors.EmptyDataError
+```
+
+The app now safely handles zero-byte/headerless CSVs for non-critical tables like:
+
+```text
+lineups.csv
+pnr_play_types.csv
+matchups.csv
+shot_zones.csv
+```
+
+Those tables can be empty if NBA.com/stats times out. The app will show warnings instead of crashing.
+
+Critical tables still must be non-empty:
+
+```text
+team_stats.csv
+player_stats.csv
+roster.csv
+```
+
+If any of those are empty, the app stops with a clear message telling you to rebuild the snapshot.

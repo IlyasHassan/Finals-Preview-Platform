@@ -1,6 +1,6 @@
 # Snapshot Data
 
-Generated at UTC: `2026-06-01T22:31:05.133703+00:00`
+Generated at UTC: `2026-06-01T22:40:25.402527+00:00`
 
 Season: `2025-26`
 

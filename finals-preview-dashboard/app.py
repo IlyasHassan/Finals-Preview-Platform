@@ -2,7 +2,7 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.utils.snapshot_loader import load_snapshot, snapshot_exists, missing_core_files
+from src.utils.snapshot_loader import load_snapshot, snapshot_exists, missing_core_files, find_invalid_critical_tables
 from src.metrics.formatting import as_percent, safe_columns
 from src.charts.radar import plot_team_radar
 from src.charts.court import draw_half_court
@@ -91,6 +91,17 @@ if not snapshot_exists():
     st.stop()
 
 data = load_snapshot()
+
+invalid_critical_tables = find_invalid_critical_tables(data)
+if invalid_critical_tables:
+    st.title("Snapshot core data is empty")
+    st.error(
+        "These required real-data tables are empty: "
+        + ", ".join(invalid_critical_tables)
+        + ". Re-run the snapshot builder and commit the generated CSVs."
+    )
+    st.code('python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --skip-shotcharts', language="bash")
+    st.stop()
 
 team_stats = data["team_stats"]
 player_stats = data["player_stats"]

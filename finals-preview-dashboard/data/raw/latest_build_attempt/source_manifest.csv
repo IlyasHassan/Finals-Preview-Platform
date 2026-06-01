@@ -1,3 +1,21 @@
 Table,Source,Status,Details
-shot_zones,Basketball-Reference Shooting,Loaded,60 zone rows
-shot_zones,Builder source selection,Loaded,NBA ShotChartDetail unavailable; using Basketball-Reference Shooting table as real source.
+roster,NBA CommonTeamRoster,Failed,"Knicks: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+roster,NBA CommonTeamRoster,Failed,"Spurs: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+espn_teams,ESPN site API teams,Loaded,2 rows
+espn_roster,ESPN site API roster,Loaded,"Knicks: alias `ny`, 18 rows"
+espn_roster,ESPN site API roster,Loaded,"Spurs: alias `sa`, 18 rows"
+roster,ESPN site API roster backup,Loaded,NBA roster unavailable; using ESPN roster backup with 36 rows
+team_stats,NBA LeagueDashTeamStats,Failed,"ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+team_stats,Basketball-Reference Miscellaneous Stats,Loaded,2 rows
+team_stats,Builder source selection,Loaded,NBA.com timed out/failed; using Basketball-Reference team stats as real source.
+player_stats,NBA LeagueDashPlayerStats,Failed,"ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+player_stats,Basketball-Reference Per Game + Advanced,Loaded,40 Knicks/Spurs rows
+basketball_reference_advanced,Basketball-Reference,Unavailable,Player/Tm columns missing
+player_stats,Builder source selection,Loaded,NBA.com timed out/failed; using Basketball-Reference player stats as real source.
+lineups,NBA LeagueDashLineups,Failed,"Knicks: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+lineups,NBA LeagueDashLineups,Failed,"Spurs: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+lineups_validation,Builder,Warning,"Lineups empty. Core build continues, but Lineups page will be empty because NBA.com/stats timed out."
+pnr_play_types,NBA SynergyPlayTypes,Failed,"PRBallHandler: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+pnr_play_types,NBA SynergyPlayTypes,Failed,"PRRollman: ReadTimeout(ReadTimeoutError(""HTTPSConnectionPool(host='stats.nba.com', port=443): Read timed out. (read timeout=30)""))"
+pnr_validation,Builder,Warning,"PnR play-type table empty. Core build continues, but PnR page will be empty because NBA.com/stats/Synergy timed out."
+matchups,NBA matchup endpoint or possession parser,Not built,No fake matchup data generated.
