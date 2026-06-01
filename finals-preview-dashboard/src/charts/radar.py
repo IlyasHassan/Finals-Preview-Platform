@@ -9,7 +9,14 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
         fig.update_layout(template="plotly_dark", title="Team radar unavailable")
         return fig
 
-    categories = ["Offense", "Defense", "Rebounding", "Pace", "Shooting", "Turnover Care"]
+    categories = [
+        "Offense",
+        "Defense",
+        "Rebounding",
+        "Pace",
+        "Shooting",
+        "Turnover Care",
+    ]
 
     for _, row in df.iterrows():
         values = [
@@ -20,6 +27,7 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
             row.get("shooting_rank", 50),
             row.get("turnover_rank", 50),
         ]
+
         fig.add_trace(
             go.Scatterpolar(
                 r=values + [values[0]],
@@ -38,11 +46,18 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
         ),
         showlegend=True,
         template="plotly_dark",
-        height=430,
+        height=420,
         margin=dict(l=30, r=30, t=55, b=30),
-        title="Live Team Strength Profile, Percentile Within Matchup",
-        legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
+        title="Snapshot Team Strength Profile",
+        legend=dict(
+            orientation="h",
+            yanchor="bottom",
+            y=-0.15,
+            xanchor="center",
+            x=0.5,
+        ),
         paper_bgcolor="#0B0D10",
         plot_bgcolor="#0B0D10",
     )
+
     return fig

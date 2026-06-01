@@ -2,14 +2,12 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.config import SEASON, SEASON_TYPE
-from src.ingest.pipeline import load_live_core
-from src.ingest.nba_live import fetch_shot_zones_for_player
+from src.utils.snapshot_loader import load_snapshot, snapshot_exists, missing_snapshot_files
+from src.metrics.formatting import as_percent, safe_columns
 from src.charts.radar import plot_team_radar
 from src.charts.court import draw_half_court
-from src.metrics.formatting import as_percent
 
-st.set_page_config(page_title="Knicks vs Spurs Live Finals Scouting", layout="wide")
+st.set_page_config(page_title="Knicks vs Spurs Snapshot Dashboard", layout="wide")
 
 CUSTOM_CSS = """
 <style>
@@ -39,16 +37,6 @@ h1 { font-size: 2.15rem !important; letter-spacing: -0.04em; }
 st.markdown(CUSTOM_CSS, unsafe_allow_html=True)
 
 
-@st.cache_data(ttl=900, show_spinner=False)
-def load_data(season, season_type):
-    return load_live_core(season, season_type)
-
-
-@st.cache_data(ttl=900, show_spinner=False)
-def load_player_shots(player_id, team, player, season, season_type):
-    return fetch_shot_zones_for_player(player_id, team, player, season, season_type)
-
-
 def metric_card(label, value, subtext=""):
     st.markdown(
         f"""
@@ -66,23 +54,9 @@ def plot_config():
     return {"displayModeBar": False, "responsive": True}
 
 
-st.sidebar.title("Live NBA Finals Dashboard")
+st.sidebar.title("Snapshot Dashboard")
 st.sidebar.markdown("**Knicks vs. Spurs**")
-st.sidebar.caption("Live-only build. No sample fallback.")
-
-season = st.sidebar.text_input("Season", value=SEASON)
-season_type = st.sidebar.selectbox(
-    "Season type",
-    ["Regular Season", "Playoffs"],
-    index=0 if SEASON_TYPE == "Regular Season" else 1,
-)
-
-if st.sidebar.button("Clear cache and reload live data"):
-    st.cache_data.clear()
-    st.rerun()
-
-with st.spinner("Requesting live data from public sources..."):
-    data, source_status = load_data(season, season_type)
+st.sidebar.caption("Saved real-season data only. No live requests on page load.")
 
 page = st.sidebar.radio(
     "Navigate",
@@ -93,57 +67,83 @@ page = st.sidebar.radio(
         "Shot Zones",
         "Pick-and-Roll",
         "Lineups",
+        "Rosters",
         "Matchups",
         "Methods & Sources",
     ],
 )
 
-team_stats = data.get("team_stats", pd.DataFrame())
-player_stats = data.get("player_stats", pd.DataFrame())
-roster = data.get("roster", pd.DataFrame())
-lineups = data.get("lineups", pd.DataFrame())
-pnr = data.get("pnr", pd.DataFrame())
+if not snapshot_exists():
+    st.title("Snapshot data has not been built yet")
+    st.error("The app uses saved real-season data only, but the snapshot CSV files are missing.")
+    st.write("Missing files:")
+    st.code("\\n".join(missing_snapshot_files()))
+
+    st.write("Run this locally, then commit the generated `data/snapshot` folder to GitHub:")
+    st.code('python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season"', language="bash")
+
+    st.write("For more shot-chart players:")
+    st.code('python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --max-shotchart-players 15', language="bash")
+    st.stop()
+
+data = load_snapshot()
+
+team_stats = data["team_stats"]
+player_stats = data["player_stats"]
+roster = data["roster"]
+lineups = data["lineups"]
+shot_zones = data["shot_zones"]
+pnr = data["pnr_play_types"]
+matchups = data["matchups"]
+manifest = data["source_manifest"]
+metadata = data["snapshot_metadata"]
+
+created = metadata["snapshot_created_utc"].iloc[0] if "snapshot_created_utc" in metadata.columns and not metadata.empty else "unknown"
+season = metadata["season"].iloc[0] if "season" in metadata.columns and not metadata.empty else "unknown"
+season_type = metadata["season_type"].iloc[0] if "season_type" in metadata.columns and not metadata.empty else "unknown"
 
 if page == "Overview":
-    st.title("Knicks vs. Spurs Live Finals Scouting Room")
+    st.title("Knicks vs. Spurs Finals Scouting Room")
     st.markdown(
-        '<div class="section-note">This version does not use placeholder/sample stats. If a source is blocked, the affected table appears as unavailable instead of being replaced with fake data.</div>',
+        f'<div class="section-note">Snapshot-only architecture. No public data requests happen when visitors open this app. Snapshot: {season}, {season_type}. Created UTC: {created}.</div>',
         unsafe_allow_html=True,
     )
 
-    status_counts = source_status["Status"].value_counts().to_dict() if not source_status.empty else {}
-    st.caption("Live source status: " + " | ".join([f"{k}: {v}" for k, v in status_counts.items()]))
-
     if team_stats.empty:
-        st.error("Team data is unavailable from the live source. Check Methods & Sources for the exact error.")
+        st.error("team_stats.csv is empty. Rebuild the snapshot and check source_manifest.csv.")
     else:
         knicks = team_stats[team_stats["team"] == "Knicks"].iloc[0] if "Knicks" in set(team_stats["team"]) else team_stats.iloc[0]
         spurs = team_stats[team_stats["team"] == "Spurs"].iloc[0] if "Spurs" in set(team_stats["team"]) else team_stats.iloc[-1]
 
         c1, c2, c3, c4 = st.columns(4)
         with c1:
-            metric_card("Knicks Net Rating", f"{knicks['net_rating']:+.1f}", "NBA.com/stats")
+            metric_card("Knicks Net Rating", f"{knicks['net_rating']:+.1f}", "saved snapshot")
         with c2:
-            metric_card("Spurs Net Rating", f"{spurs['net_rating']:+.1f}", "NBA.com/stats")
+            metric_card("Spurs Net Rating", f"{spurs['net_rating']:+.1f}", "saved snapshot")
         with c3:
-            metric_card("Knicks Pace", f"{knicks['pace']:.1f}", "NBA.com/stats")
+            metric_card("Knicks Pace", f"{knicks['pace']:.1f}", "saved snapshot")
         with c4:
-            metric_card("Spurs Pace", f"{spurs['pace']:.1f}", "NBA.com/stats")
+            metric_card("Spurs Pace", f"{spurs['pace']:.1f}", "saved snapshot")
 
         left, right = st.columns([1.1, 1])
+
         with left:
             st.plotly_chart(plot_team_radar(team_stats), use_container_width=True, config=plot_config())
+
         with right:
             st.subheader("Four Factors")
-            cols = ["team", "efg_pct", "ts_pct", "tov_pct", "oreb_pct", "dreb_pct"]
-            show = team_stats[[c for c in cols if c in team_stats.columns]]
-            st.dataframe(as_percent(show, ["efg_pct", "ts_pct", "tov_pct", "oreb_pct", "dreb_pct"]), hide_index=True, use_container_width=True)
+            show = safe_columns(team_stats, ["team", "efg_pct", "ts_pct", "tov_pct", "oreb_pct", "dreb_pct"])
+            st.dataframe(
+                as_percent(show, ["efg_pct", "ts_pct", "tov_pct", "oreb_pct", "dreb_pct"]),
+                hide_index=True,
+                use_container_width=True,
+            )
 
 elif page == "Teams":
-    st.title("Live Team Comparison")
+    st.title("Team Comparison")
 
     if team_stats.empty:
-        st.error("Live team stats unavailable. No sample data is being used.")
+        st.error("team_stats.csv is empty.")
     else:
         st.dataframe(
             as_percent(team_stats, ["efg_pct", "ts_pct", "tov_pct", "oreb_pct", "dreb_pct"]),
@@ -151,21 +151,37 @@ elif page == "Teams":
             use_container_width=True,
         )
 
-        col1, col2 = st.columns(2)
-        with col1:
-            fig = px.bar(team_stats, x="team", y=["ortg", "drtg", "net_rating"], barmode="group", template="plotly_dark", title="Live Efficiency Ratings")
+        c1, c2 = st.columns(2)
+
+        with c1:
+            fig = px.bar(
+                team_stats,
+                x="team",
+                y=["ortg", "drtg", "net_rating"],
+                barmode="group",
+                template="plotly_dark",
+                title="Efficiency Ratings",
+            )
             fig.update_layout(paper_bgcolor="#0B0D10", plot_bgcolor="#0B0D10", legend_title_text="")
             st.plotly_chart(fig, use_container_width=True, config=plot_config())
-        with col2:
-            fig = px.bar(team_stats, x="team", y=["efg_pct", "ts_pct", "tov_pct"], barmode="group", template="plotly_dark", title="Live Shooting and Turnover Profile")
+
+        with c2:
+            fig = px.bar(
+                team_stats,
+                x="team",
+                y=["efg_pct", "ts_pct", "tov_pct"],
+                barmode="group",
+                template="plotly_dark",
+                title="Shooting and Turnover Profile",
+            )
             fig.update_layout(paper_bgcolor="#0B0D10", plot_bgcolor="#0B0D10", legend_title_text="")
             st.plotly_chart(fig, use_container_width=True, config=plot_config())
 
 elif page == "Players":
-    st.title("Live Player Scouting")
+    st.title("Player Scouting")
 
     if player_stats.empty:
-        st.error("Live player stats unavailable. No sample data is being used.")
+        st.error("player_stats.csv is empty.")
     else:
         teams = sorted(player_stats["team"].dropna().unique())
         selected_teams = st.multiselect("Team", teams, default=teams)
@@ -177,7 +193,7 @@ elif page == "Players":
         ].sort_values(["team", "min"], ascending=[True, False])
 
         st.dataframe(
-            as_percent(filtered, ["fg_pct", "fg3_pct", "ft_pct", "ts_pct", "ws48"]),
+            as_percent(filtered, ["fg_pct", "fg3_pct", "ft_pct", "ts_pct", "ws48", "ts_pct_reference"]),
             hide_index=True,
             use_container_width=True,
             height=430,
@@ -190,48 +206,46 @@ elif page == "Players":
             size="pts",
             color="team",
             hover_name="player",
-            hover_data=["position", "min", "pts", "ast", "reb", "net_rating", "per", "bpm"],
+            hover_data=[col for col in ["position", "min", "pts", "ast", "reb", "net_rating", "per", "bpm", "vorp"] if col in filtered.columns],
             template="plotly_dark",
-            title="Live Usage vs True Shooting",
+            title="Usage vs True Shooting",
         )
         fig.update_layout(paper_bgcolor="#0B0D10", plot_bgcolor="#0B0D10")
         st.plotly_chart(fig, use_container_width=True, config=plot_config())
 
 elif page == "Shot Zones":
-    st.title("Live Shot Zones")
+    st.title("Shot Zones")
 
-    if player_stats.empty:
-        st.error("Player list unavailable, so shot charts cannot be requested.")
+    if shot_zones.empty:
+        st.error("shot_zones.csv is empty. Rebuild the snapshot and check NBA ShotChartDetail results.")
     else:
-        teams = sorted(player_stats["team"].dropna().unique())
-        team = st.selectbox("Team", teams)
-        team_players = player_stats[player_stats["team"] == team].sort_values("min", ascending=False)
-        player = st.selectbox("Player", team_players["player"].tolist())
-        row = team_players[team_players["player"] == player].iloc[0]
+        teams = sorted(shot_zones["team"].dropna().unique())
+        selected_team = st.selectbox("Team", teams)
+        players = sorted(shot_zones[shot_zones["team"] == selected_team]["player"].dropna().unique())
+        selected_player = st.selectbox("Player", players)
 
-        if st.button(f"Fetch live shot zones for {player}"):
-            st.cache_data.clear()
+        player_shots = shot_zones[
+            (shot_zones["team"] == selected_team)
+            & (shot_zones["player"] == selected_player)
+        ].copy()
 
-        shots, msg = load_player_shots(int(row["player_id"]), team, player, season, season_type)
+        c1, c2 = st.columns([1.15, 1])
 
-        st.caption(msg)
+        with c1:
+            st.plotly_chart(draw_half_court(player_shots), use_container_width=True, config=plot_config())
 
-        if shots.empty:
-            st.error("Live shot-zone data unavailable for this player. No sample chart is being shown.")
-        else:
-            col1, col2 = st.columns([1.15, 1])
-            with col1:
-                st.plotly_chart(draw_half_court(shots), use_container_width=True, config=plot_config())
-            with col2:
-                st.subheader(f"{player}: NBA ShotChartDetail")
-                st.dataframe(
-                    as_percent(shots[["zone", "fg_pct", "efg_pct", "shot_volume", "volume_rank"]], ["fg_pct", "efg_pct"]),
-                    hide_index=True,
-                    use_container_width=True,
-                )
+        with c2:
+            st.subheader(f"{selected_player}: Shot Zones")
+            display = safe_columns(player_shots, ["zone", "fg_pct", "efg_pct", "shot_volume", "volume_rank"])
+            st.dataframe(
+                as_percent(display, ["fg_pct", "efg_pct"]),
+                hide_index=True,
+                use_container_width=True,
+            )
 
-                best = shots.sort_values("efg_pct", ascending=False).iloc[0]
-                worst = shots.sort_values("efg_pct", ascending=True).iloc[0]
+            if not player_shots.empty:
+                best = player_shots.sort_values("efg_pct", ascending=False).iloc[0]
+                worst = player_shots.sort_values("efg_pct", ascending=True).iloc[0]
                 a, b = st.columns(2)
                 with a:
                     metric_card("Best Zone", best["zone"], f"{best['efg_pct']:.1%}")
@@ -239,38 +253,51 @@ elif page == "Shot Zones":
                     metric_card("Worst Zone", worst["zone"], f"{worst['efg_pct']:.1%}")
 
 elif page == "Pick-and-Roll":
-    st.title("Live Pick-and-Roll Play Types")
+    st.title("Pick-and-Roll Play Types")
 
-    st.info(
-        "This page shows live NBA Synergy play-type rows when available. It does not invent handler-screener duo data or coverage labels."
-    )
+    st.info("This page shows saved NBA Synergy play-type rows. It does not invent exact handler-screener duos or coverage labels.")
 
     if pnr.empty:
-        st.error("Live PnR/Synergy data unavailable. No sample PnR data is being used.")
+        st.error("pnr_play_types.csv is empty. SynergyPlayTypes may have failed during the snapshot build.")
     else:
-        st.dataframe(as_percent(pnr, ["percentile", "tov_pct", "score_freq"]), hide_index=True, use_container_width=True, height=420)
+        teams = sorted(pnr["team"].dropna().unique())
+        selected_teams = st.multiselect("Team", teams, default=teams)
+
+        filtered = pnr[pnr["team"].isin(selected_teams)].copy()
+
+        st.dataframe(
+            as_percent(filtered, ["percentile", "tov_pct", "score_freq"]),
+            hide_index=True,
+            use_container_width=True,
+            height=420,
+        )
 
         fig = px.scatter(
-            pnr,
+            filtered,
             x="possessions",
             y="ppp",
             color="team",
             symbol="play_type",
             hover_name="player",
-            hover_data=["percentile", "tov_pct", "score_freq"],
+            hover_data=[col for col in ["percentile", "tov_pct", "score_freq"] if col in filtered.columns],
             template="plotly_dark",
-            title="Live PnR Play-Type Efficiency",
+            title="PnR Play-Type Efficiency",
         )
         fig.update_layout(paper_bgcolor="#0B0D10", plot_bgcolor="#0B0D10")
         st.plotly_chart(fig, use_container_width=True, config=plot_config())
 
 elif page == "Lineups":
-    st.title("Live Lineup Analysis")
+    st.title("Lineup Analysis")
 
     if lineups.empty:
-        st.error("Live lineup data unavailable. No sample lineup data is being used.")
+        st.error("lineups.csv is empty.")
     else:
-        st.dataframe(as_percent(lineups, ["efg_pct", "tov_pct", "reb_pct"]), hide_index=True, use_container_width=True, height=360)
+        st.dataframe(
+            as_percent(lineups, ["efg_pct", "tov_pct", "reb_pct"]),
+            hide_index=True,
+            use_container_width=True,
+            height=360,
+        )
 
         fig = px.bar(
             lineups.sort_values("net_rating", ascending=False),
@@ -279,38 +306,51 @@ elif page == "Lineups":
             color="team",
             orientation="h",
             template="plotly_dark",
-            title="Live Lineup Net Rating",
+            title="Lineup Net Rating",
         )
         fig.update_layout(yaxis={"categoryorder": "total ascending"}, paper_bgcolor="#0B0D10", plot_bgcolor="#0B0D10")
         st.plotly_chart(fig, use_container_width=True, config=plot_config())
 
-elif page == "Matchups":
-    st.title("Live Matchups")
-
-    st.warning(
-        "This build does not show fake matchup data. Exact player-vs-player matchup rows require a stable matchup endpoint integration or a possession-level parser. No placeholder matrix is displayed."
-    )
+elif page == "Rosters":
+    st.title("Rosters")
 
     if roster.empty:
-        st.error("Roster unavailable.")
+        st.error("roster.csv is empty.")
     else:
-        st.subheader("Current live roster pool")
-        st.dataframe(roster, hide_index=True, use_container_width=True, height=420)
+        st.dataframe(roster, hide_index=True, use_container_width=True, height=500)
+
+elif page == "Matchups":
+    st.title("Matchups")
+
+    if matchups.empty:
+        st.warning("No matchup matrix is shown because no real matchup endpoint/parser has been integrated yet. The app does not fabricate matchup data.")
+        st.write("To add this later, use a real NBA matchup endpoint or possession-level parser and write the result into `data/snapshot/matchups.csv`.")
+    else:
+        st.dataframe(
+            as_percent(matchups, ["fg_pct_allowed", "fg_pct_suppression"]),
+            hide_index=True,
+            use_container_width=True,
+            height=420,
+        )
 
 elif page == "Methods & Sources":
     st.title("Methods & Sources")
 
-    st.subheader("Live Source Status")
-    st.dataframe(source_status, hide_index=True, use_container_width=True, height=360)
+    st.subheader("Snapshot Metadata")
+    st.dataframe(metadata, hide_index=True, use_container_width=True)
 
-    st.subheader("Live-only policy")
+    st.subheader("Source Manifest")
+    st.dataframe(manifest, hide_index=True, use_container_width=True, height=420)
+
     st.markdown(
         """
-        - No sample CSV fallback is used.
-        - If a source is blocked, the app shows the table as unavailable.
-        - PnR coverage labels such as drop, switch, hedge, blitz, and ICE are not fabricated.
-        - Exact PnR duos are not fabricated from unrelated pass data.
-        - Basketball-Reference advanced stats are merged only if the live scrape succeeds.
-        - PBPStats is attempted separately and reported in the source-status table.
+        **Snapshot policy**
+
+        - The deployed app does not request public data on page load.
+        - The regular-season data is pulled once by `scripts/build_snapshot.py`.
+        - The generated CSV files are committed to GitHub.
+        - No sample fallback data is used.
+        - Missing/failed tables are shown as missing or empty, not replaced with fake values.
+        - Pick-and-roll coverage labels such as drop, switch, hedge, blitz, and ICE are not fabricated.
         """
     )
