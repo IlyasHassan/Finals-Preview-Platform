@@ -1,0 +1,6 @@
+defender,team_defense,offender,team_offense,possessions,pts_allowed,fg_pct_allowed,fg_pct_suppression,notes
+OG Anunoby,Knicks,Victor Wembanyama,Spurs,45,32,0.440,-0.042,Length and strength matchup
+Mitchell Robinson,Knicks,Victor Wembanyama,Spurs,38,22,0.380,-0.068,Rim protection matchup
+Jeremy Sochan,Spurs,Jalen Brunson,Knicks,52,45,0.480,-0.021,Size at point of attack
+Victor Wembanyama,Spurs,Julius Randle,Knicks,38,22,0.380,-0.055,Paint deterrence matchup
+Josh Hart,Knicks,Devin Vassell,Spurs,41,38,0.470,0.014,Chaser/connector matchup
