@@ -1,0 +1,37 @@
+player_id,player,team,position,jersey,height,weight,birth_date,age,exp,school
+,Jose Alvarado,Knicks,G,5,"6' 0""",179 lbs,1998-04-12T07:00Z,28,4,Georgia Tech
+,OG Anunoby,Knicks,F,8,"6' 7""",240 lbs,1997-07-17T07:00Z,28,8,Indiana
+,Mikal Bridges,Knicks,G,25,"6' 6""",209 lbs,1996-08-30T07:00Z,29,7,Villanova
+,Jalen Brunson,Knicks,G,11,"6' 2""",190 lbs,1996-08-31T07:00Z,29,7,Villanova
+,Jordan Clarkson,Knicks,G,00,"6' 5""",194 lbs,1992-06-07T07:00Z,33,11,Missouri
+,Pacome Dadiet,Knicks,F,4,"6' 9""",210 lbs,2005-07-27T07:00Z,20,1,
+,Mohamed Diawara,Knicks,F,51,"6' 9""",225 lbs,2005-04-29T07:00Z,21,0,
+,Josh Hart,Knicks,G,3,"6' 5""",215 lbs,1995-03-06T08:00Z,31,8,Villanova
+,Ariel Hukporti,Knicks,C,55,"7' 0""",246 lbs,2002-04-12T07:00Z,24,1,
+,Trey Jemison III,Knicks,F,50,"6' 10""",270 lbs,1999-11-28T08:00Z,26,2,UAB
+,Dillon Jones,Knicks,F,33,"6' 5""",235 lbs,2001-10-29T08:00Z,24,1,Weber State
+,Tyler Kolek,Knicks,G,13,"6' 2""",195 lbs,2001-03-27T08:00Z,25,1,Marquette
+,Miles McBride,Knicks,G,2,"6' 2""",195 lbs,2000-09-08T07:00Z,25,4,West Virginia
+,Kevin McCullar Jr.,Knicks,G,9,"6' 6""",210 lbs,2001-03-15T08:00Z,25,1,Kansas
+,Mitchell Robinson,Knicks,C,23,"7' 0""",240 lbs,1998-04-01T08:00Z,28,7,
+,Landry Shamet,Knicks,G,44,"6' 5""",190 lbs,1997-03-13T08:00Z,29,7,Wichita State
+,Jeremy Sochan,Knicks,F,20,"6' 8""",230 lbs,2003-05-20T07:00Z,23,3,Baylor
+,Karl-Anthony Towns,Knicks,C,32,"7' 0""",248 lbs,1995-11-15T08:00Z,30,10,Kentucky
+,Harrison Barnes,Spurs,F,40,"6' 7""",225 lbs,1992-05-30T07:00Z,34,13,North Carolina
+,Bismack Biyombo,Spurs,C,18,"6' 8""",255 lbs,1992-08-28T07:00Z,33,14,
+,Carter Bryant,Spurs,F,11,"6' 6""",220 lbs,2005-11-26T08:00Z,20,0,Arizona
+,Stephon Castle,Spurs,G,5,"6' 6""",215 lbs,2004-11-01T08:00Z,21,1,UConn
+,Julian Champagnie,Spurs,F,30,"6' 7""",217 lbs,2001-06-29T07:00Z,24,3,St. John's
+,De'Aaron Fox,Spurs,G,4,"6' 3""",185 lbs,1997-12-20T08:00Z,28,8,Kentucky
+,Dylan Harper,Spurs,G,2,"6' 5""",215 lbs,2006-03-02T08:00Z,20,0,Rutgers
+,Harrison Ingram,Spurs,F,55,"6' 5""",230 lbs,2002-11-27T08:00Z,23,1,North Carolina
+,Keldon Johnson,Spurs,F,3,"6' 5""",220 lbs,1999-10-11T07:00Z,26,6,Kentucky
+,David Jones Garcia,Spurs,F,25,"6' 4""",210 lbs,2001-11-24T08:00Z,24,0,Memphis
+,Luke Kornet,Spurs,C,7,"7' 1""",250 lbs,1995-07-15T07:00Z,30,8,Vanderbilt
+,Jordan McLaughlin,Spurs,G,0,"6' 0""",185 lbs,1996-04-09T07:00Z,30,6,USC
+,Emanuel Miller,Spurs,F,14,"6' 5""",215 lbs,2000-06-19T07:00Z,25,1,TCU
+,Kelly Olynyk,Spurs,F,8,"7' 0""",240 lbs,1991-04-19T07:00Z,35,12,Gonzaga
+,Mason Plumlee,Spurs,C,45,"7' 0""",254 lbs,1990-03-05T08:00Z,36,12,Duke
+,Devin Vassell,Spurs,G,24,"6' 5""",200 lbs,2000-08-23T07:00Z,25,5,Florida State
+,Lindy Waters III,Spurs,F,43,"6' 5""",210 lbs,1997-07-28T07:00Z,28,4,Oklahoma State
+,Victor Wembanyama,Spurs,F,1,"7' 4""",235 lbs,2004-01-04T08:00Z,22,2,

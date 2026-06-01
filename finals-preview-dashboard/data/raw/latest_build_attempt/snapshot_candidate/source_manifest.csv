@@ -1,0 +1,3 @@
+Table,Source,Status,Details
+shot_zones,Basketball-Reference Shooting,Loaded,60 zone rows
+shot_zones,Builder source selection,Loaded,NBA ShotChartDetail unavailable; using Basketball-Reference Shooting table as real source.
