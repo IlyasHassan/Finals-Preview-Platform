@@ -3,27 +3,23 @@ import pandas as pd
 
 
 def plot_team_radar(df: pd.DataFrame) -> go.Figure:
-    categories = [
-        "Offense",
-        "Defense",
-        "Rebounding",
-        "Transition",
-        "Rim Protection",
-        "Perimeter Defense",
-    ]
-
     fig = go.Figure()
+
+    if df.empty:
+        fig.update_layout(template="plotly_dark", title="Team radar unavailable")
+        return fig
+
+    categories = ["Offense", "Defense", "Rebounding", "Pace", "Shooting", "Turnover Care"]
 
     for _, row in df.iterrows():
         values = [
             row.get("off_rank", 50),
             row.get("def_rank", 50),
             row.get("reb_rank", 50),
-            row.get("trans_rank", 50),
-            row.get("rim_rank", 50),
-            row.get("perimeter_rank", 50),
+            row.get("pace_rank", 50),
+            row.get("shooting_rank", 50),
+            row.get("turnover_rank", 50),
         ]
-
         fig.add_trace(
             go.Scatterpolar(
                 r=values + [values[0]],
@@ -44,8 +40,9 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
         template="plotly_dark",
         height=430,
         margin=dict(l=30, r=30, t=55, b=30),
-        title="Team Strength Profile, Percentile Rank",
+        title="Live Team Strength Profile, Percentile Within Matchup",
         legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
+        paper_bgcolor="#0B0D10",
+        plot_bgcolor="#0B0D10",
     )
-
     return fig
