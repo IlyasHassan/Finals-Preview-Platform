@@ -48,7 +48,6 @@ def draw_half_court(shot_df: pd.DataFrame) -> go.Figure:
 
     fig.update_xaxes(range=[-260, 260], visible=False, fixedrange=True)
     fig.update_yaxes(range=[-60, 430], visible=False, fixedrange=True, scaleanchor="x", scaleratio=1)
-
     fig.update_layout(
         height=520,
         template="plotly_dark",

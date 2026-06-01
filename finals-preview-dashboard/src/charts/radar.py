@@ -9,14 +9,7 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
         fig.update_layout(template="plotly_dark", title="Team radar unavailable")
         return fig
 
-    categories = [
-        "Offense",
-        "Defense",
-        "Rebounding",
-        "Pace",
-        "Shooting",
-        "Turnover Care",
-    ]
+    categories = ["Offense", "Defense", "Rebounding", "Pace", "Shooting", "Turnover Care"]
 
     for _, row in df.iterrows():
         values = [
@@ -49,13 +42,7 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
         height=420,
         margin=dict(l=30, r=30, t=55, b=30),
         title="Snapshot Team Strength Profile",
-        legend=dict(
-            orientation="h",
-            yanchor="bottom",
-            y=-0.15,
-            xanchor="center",
-            x=0.5,
-        ),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
         paper_bgcolor="#0B0D10",
         plot_bgcolor="#0B0D10",
     )

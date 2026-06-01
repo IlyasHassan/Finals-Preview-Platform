@@ -6,19 +6,19 @@ TEAM_IDS = {
     "Spurs": 1610612759,
 }
 
-TEAM_ABBREVIATIONS = {
-    "Knicks": "NYK",
-    "Spurs": "SAS",
-}
-
-REQUIRED_SNAPSHOT_FILES = {
+REQUIRED_CORE_FILES = {
     "team_stats": "team_stats.csv",
     "player_stats": "player_stats.csv",
     "roster": "roster.csv",
     "lineups": "lineups.csv",
-    "shot_zones": "shot_zones.csv",
     "pnr_play_types": "pnr_play_types.csv",
     "matchups": "matchups.csv",
     "source_manifest": "source_manifest.csv",
     "snapshot_metadata": "snapshot_metadata.csv",
+}
+
+OPTIONAL_FILES = {
+    "shot_zones": "shot_zones.csv",
+    "espn_teams": "espn_teams.csv",
+    "espn_rosters": "espn_rosters.csv",
 }

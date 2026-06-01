@@ -1,18 +1,17 @@
 # Knicks vs Spurs Finals Scouting Dashboard
 
-Final snapshot architecture.
+Final snapshot architecture, version 2.
 
-The deployed Streamlit app does **not** request NBA.com/stats, Basketball-Reference, or PBPStats on page load.
+This version fixes the empty-CSV problem by making the snapshot builder fail fast.
 
-Instead:
+## Key fixes
 
-1. Run `scripts/build_snapshot.py` locally.
-2. The script pulls real current-season data once.
-3. The script writes CSV files into `data/snapshot/`.
-4. Commit the generated `data/snapshot/` files to GitHub.
-5. Streamlit reads the saved snapshot forever.
-
-No sample fallback. No fake placeholder data. No silent substitution.
+- The app never requests NBA.com/stats on page load.
+- The builder pulls real data once and saves it.
+- The builder does **not** overwrite a good snapshot with empty CSVs.
+- Core data and slow shot charts are separated.
+- If NBA.com/stats is blocked, the script stops and prints the actual source failure.
+- No sample fallback data is used.
 
 ## Install
 
@@ -20,58 +19,94 @@ No sample fallback. No fake placeholder data. No silent substitution.
 pip install -r requirements.txt
 ```
 
-## Build the regular-season snapshot
+## Step 1: diagnose sources
+
+Run this first:
 
 ```bash
-python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season"
+python scripts/diagnose_sources.py --season 2025-26 --season-type "Regular Season"
 ```
 
-This writes:
+This checks whether NBA.com/stats is reachable from your machine.
+
+## Step 2: build fast core snapshot
+
+Run:
+
+```bash
+python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --skip-shotcharts
+```
+
+This creates:
 
 ```text
-data/snapshot/team_stats.csv
-data/snapshot/player_stats.csv
-data/snapshot/roster.csv
-data/snapshot/lineups.csv
-data/snapshot/shot_zones.csv
-data/snapshot/pnr_play_types.csv
-data/snapshot/matchups.csv
-data/snapshot/source_manifest.csv
-data/snapshot/snapshot_metadata.csv
-data/snapshot/README.md
+team_stats.csv
+player_stats.csv
+roster.csv
+lineups.csv
+pnr_play_types.csv
+matchups.csv
+source_manifest.csv
+snapshot_metadata.csv
 ```
 
-## Build with more shot-chart players
+## Step 3: add shot charts separately
+
+Shot charts are slow because they require player-by-player requests.
+
+Start small:
 
 ```bash
-python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --max-shotchart-players 30
+python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --only-shotcharts --max-shotchart-players 6
 ```
 
-## Run locally
+Then increase later:
+
+```bash
+python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --only-shotcharts --max-shotchart-players 12
+```
+
+This writes one combined file:
+
+```text
+data/snapshot/shot_zones.csv
+```
+
+## Step 4: run the app
 
 ```bash
 streamlit run app.py
 ```
 
-## Deploy
+## Step 5: commit generated snapshot files
 
-Commit the generated `data/snapshot/` folder to GitHub.
+Commit the full `data/snapshot/` folder to GitHub.
 
-If these files are nested inside a `finals-preview-dashboard` folder in your repo, use this Streamlit main file path:
+## Important
 
-```text
-finals-preview-dashboard/app.py
-```
-
-If these files are at the repo root, use:
+If the CSVs are empty, do not deploy. Check:
 
 ```text
-app.py
+data/raw/latest_build_attempt/source_manifest.csv
+data/raw/latest_build_attempt/build_errors.txt
 ```
 
-## Data philosophy
+The builder now preserves failure logs.
 
-- Official/statistical layer: NBA.com/stats via `nba_api`.
-- Reference layer: Basketball-Reference advanced metrics.
-- Possession-enrichment layer: PBPStats where accessible.
-- Tactical coverage labels: not fabricated. Drop/switch/hedge/blitz/ICE require manually charted or licensed data.
+
+## ESPN API addition
+
+This version also tries ESPN's public site API:
+
+```text
+https://site.api.espn.com/apis/site/v2/sports/basketball/nba/teams
+```
+
+It writes these audit/enrichment files when available:
+
+```text
+data/snapshot/espn_teams.csv
+data/snapshot/espn_rosters.csv
+```
+
+ESPN is used as a real backup for roster/team metadata only. It is not a substitute for NBA.com/stats shot charts, lineups, Synergy play types, or Basketball-Reference advanced metrics.
