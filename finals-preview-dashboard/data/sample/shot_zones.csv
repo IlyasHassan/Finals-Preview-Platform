@@ -1,18 +1,41 @@
 player,team,zone,loc_x,loc_y,fg_pct,efg_pct,shot_volume,volume_rank
-Jalen Brunson,Knicks,Restricted Area,0,10,0.680,0.680,24,1
-Jalen Brunson,Knicks,Paint Non-RA,45,85,0.490,0.490,19,2
-Jalen Brunson,Knicks,Midrange,120,150,0.460,0.460,17,3
-Jalen Brunson,Knicks,Corner 3,-230,10,0.410,0.615,8,5
-Jalen Brunson,Knicks,Above-the-break 3,120,280,0.375,0.563,15,4
-Victor Wembanyama,Spurs,Restricted Area,0,5,0.750,0.750,25,1
-Victor Wembanyama,Spurs,Paint Non-RA,-50,90,0.440,0.440,16,3
-Victor Wembanyama,Spurs,Midrange,-110,160,0.430,0.430,10,5
-Victor Wembanyama,Spurs,Corner 3,230,20,0.390,0.585,12,4
-Victor Wembanyama,Spurs,Above-the-break 3,120,280,0.370,0.555,19,2
-OG Anunoby,Knicks,Restricted Area,0,8,0.705,0.705,13,2
-OG Anunoby,Knicks,Corner 3,-230,20,0.420,0.630,15,1
-OG Anunoby,Knicks,Above-the-break 3,-130,280,0.380,0.570,12,3
-Devin Vassell,Spurs,Restricted Area,0,12,0.620,0.620,11,4
-Devin Vassell,Spurs,Midrange,110,175,0.455,0.455,16,2
-Devin Vassell,Spurs,Corner 3,230,15,0.430,0.645,13,3
-Devin Vassell,Spurs,Above-the-break 3,-130,280,0.390,0.585,18,1
+Jalen Brunson,Knicks,Restricted Area,0,10,0.660,0.660,24,1
+Jalen Brunson,Knicks,Paint Non-RA,45,85,0.485,0.485,20,2
+Jalen Brunson,Knicks,Midrange,115,155,0.462,0.462,18,3
+Jalen Brunson,Knicks,Corner 3,-230,10,0.405,0.608,8,5
+Jalen Brunson,Knicks,Above-the-break 3,125,280,0.382,0.573,16,4
+Karl-Anthony Towns,Knicks,Restricted Area,0,8,0.720,0.720,22,1
+Karl-Anthony Towns,Knicks,Paint Non-RA,-45,90,0.505,0.505,15,3
+Karl-Anthony Towns,Knicks,Midrange,-115,170,0.460,0.460,11,5
+Karl-Anthony Towns,Knicks,Corner 3,230,10,0.420,0.630,13,4
+Karl-Anthony Towns,Knicks,Above-the-break 3,-125,285,0.410,0.615,18,2
+Mikal Bridges,Knicks,Restricted Area,0,14,0.665,0.665,15,3
+Mikal Bridges,Knicks,Midrange,105,165,0.455,0.455,17,2
+Mikal Bridges,Knicks,Corner 3,-230,20,0.425,0.638,14,4
+Mikal Bridges,Knicks,Above-the-break 3,130,285,0.385,0.578,19,1
+OG Anunoby,Knicks,Restricted Area,0,8,0.705,0.705,13,3
+OG Anunoby,Knicks,Corner 3,-230,20,0.420,0.630,18,1
+OG Anunoby,Knicks,Above-the-break 3,-130,280,0.380,0.570,15,2
+Josh Hart,Knicks,Restricted Area,0,10,0.690,0.690,18,1
+Josh Hart,Knicks,Corner 3,230,18,0.370,0.555,9,3
+Josh Hart,Knicks,Above-the-break 3,-120,280,0.340,0.510,11,2
+Victor Wembanyama,Spurs,Restricted Area,0,5,0.760,0.760,27,1
+Victor Wembanyama,Spurs,Paint Non-RA,-50,90,0.470,0.470,17,3
+Victor Wembanyama,Spurs,Midrange,-110,160,0.440,0.440,13,5
+Victor Wembanyama,Spurs,Corner 3,230,20,0.385,0.578,14,4
+Victor Wembanyama,Spurs,Above-the-break 3,120,280,0.365,0.548,20,2
+De'Aaron Fox,Spurs,Restricted Area,0,12,0.670,0.670,23,1
+De'Aaron Fox,Spurs,Paint Non-RA,40,90,0.490,0.490,19,2
+De'Aaron Fox,Spurs,Midrange,115,170,0.450,0.450,16,3
+De'Aaron Fox,Spurs,Above-the-break 3,-130,280,0.350,0.525,13,4
+Stephon Castle,Spurs,Restricted Area,0,10,0.655,0.655,18,1
+Stephon Castle,Spurs,Paint Non-RA,-45,85,0.465,0.465,15,2
+Stephon Castle,Spurs,Corner 3,230,18,0.370,0.555,10,4
+Stephon Castle,Spurs,Above-the-break 3,-125,285,0.350,0.525,13,3
+Dylan Harper,Spurs,Restricted Area,0,12,0.630,0.630,15,1
+Dylan Harper,Spurs,Paint Non-RA,45,95,0.455,0.455,13,2
+Dylan Harper,Spurs,Above-the-break 3,130,280,0.355,0.533,11,3
+Devin Vassell,Spurs,Restricted Area,0,12,0.620,0.620,12,4
+Devin Vassell,Spurs,Midrange,110,175,0.455,0.455,17,2
+Devin Vassell,Spurs,Corner 3,230,15,0.430,0.645,14,3
+Devin Vassell,Spurs,Above-the-break 3,-130,280,0.390,0.585,20,1

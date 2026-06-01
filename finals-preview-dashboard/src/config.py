@@ -17,14 +17,3 @@ TEAM_FULL_NAMES = {
     "Knicks": "New York Knicks",
     "Spurs": "San Antonio Spurs",
 }
-
-SAMPLE_PLAYER_NAMES = [
-    "Jalen Brunson",
-    "Victor Wembanyama",
-    "OG Anunoby",
-    "Devin Vassell",
-    "Josh Hart",
-    "Chris Paul",
-    "Jeremy Sochan",
-    "Mitchell Robinson",
-]

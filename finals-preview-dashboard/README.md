@@ -1,71 +1,45 @@
 # 2026 NBA Finals: Knicks vs. Spurs Preview Platform
 
-This is a Streamlit dashboard for a Knicks vs. Spurs NBA Finals scouting preview.
+Cleaned Batch 2.1 Streamlit dashboard.
 
-## Batch 2 update
+## What this version fixes
 
-This version adds a live-ingestion layer with safe fallback behavior.
+- Removes Chris Paul from the Spurs sample roster.
+- Adds a fuller Knicks/Spurs Finals roster pool.
+- Keeps live-first ingestion, but makes sample fallback cleaner.
+- Improves the UI with cleaner spacing, cards, formatted tables, better charts, and better source status.
+- Makes the Methods page explicit about which tables are live, fallback, sample, or proxy.
 
-The app has two modes:
-
-1. **Sample data mode**  
-   Guaranteed to work. Uses the CSV files in `data/sample`.
-
-2. **Live-first mode**  
-   Attempts to pull live/current data from:
-   - NBA.com/stats via `nba_api`
-   - Basketball-Reference through cached HTML table parsing
-   - PBPStats through a lightweight API client scaffold
-
-If any source fails, the app falls back to the sample CSVs so the deployed website stays online.
-
-## Local setup
-
-```bash
-python -m venv venv
-```
-
-Windows:
-
-```bash
-venv\Scripts\activate
-```
-
-Mac/Linux:
-
-```bash
-source venv/bin/activate
-```
-
-Install dependencies:
+## Run locally
 
 ```bash
 pip install -r requirements.txt
-```
-
-Run the app:
-
-```bash
 streamlit run app.py
 ```
 
-## Deploy to Streamlit Community Cloud
+## Streamlit Cloud main file path
 
-If the repository root contains `app.py`, use:
-
-```text
-app.py
-```
-
-If the app is inside a nested folder called `finals-preview-dashboard`, use:
+If this folder is nested in your repo:
 
 ```text
 finals-preview-dashboard/app.py
 ```
 
-## Data limitations
+If these files are at the repo root:
 
-Public NBA data access can be inconsistent in cloud environments. NBA.com/stats may throttle or block requests. Basketball-Reference may rate-limit scraping. PBPStats endpoint availability can change.
+```text
+app.py
+```
 
-This project is designed to degrade gracefully:
-live source fails -> cached file if available -> sample data fallback.
+## Data note
+
+The static CSVs are cleaned demo/proxy data built to make the app usable even when public sources are blocked. **Live-first + cleaned fallback** is now the default sidebar mode. Use **Cleaned sample data** only for offline/demo mode.
+
+
+## Important Batch 2.2 fix
+
+The app now defaults to live-first mode. The code uses `data_mode.startswith("Live-first")` instead of exact text matching, so changing the label in the sidebar will not accidentally force sample mode.
+
+If the Methods page says **Manual sample mode**, you are using the sample-data radio option.
+
+If it says **Attempted live, fell back**, the app tried the public source but Streamlit Cloud/source access failed for that table.

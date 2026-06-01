@@ -2,17 +2,11 @@ import pandas as pd
 
 
 def calculate_pnr_duo_score(row: pd.Series) -> float:
-    """
-    Transparent composite for ranking PnR duos.
-
-    This is not an official NBA metric. It combines efficiency, lineup impact,
-    volume, and pass-connection context when available.
-    """
-    ppp_component = row.get("ppp", 0) * 40
-    impact_component = row.get("net_rating", 0) * 2
-    volume_component = row.get("possessions", 0) / 10
-    passing_component = row.get("assist_pct", 0) * 20
-    connection_component = row.get("pass_connections", 0) / 10
+    ppp_component = row.get("ppp", 0) * 45
+    impact_component = row.get("net_rating", 0) * 1.8
+    volume_component = row.get("possessions", 0) / 12
+    passing_component = row.get("assist_pct", 0) * 22
+    connection_component = row.get("pass_connections", 0) / 12
 
     return round(
         ppp_component

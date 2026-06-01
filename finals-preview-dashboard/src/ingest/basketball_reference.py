@@ -9,23 +9,15 @@ from src.config import SEASON
 
 
 def _season_end_year(season: str) -> int:
-    # "2025-26" -> 2026
     try:
-        start = int(season.split("-")[0])
-        return start + 1
+        return int(season.split("-")[0]) + 1
     except Exception:
         return 2026
 
 
 def fetch_bref_advanced(season: str = SEASON, player_names: Iterable[str] | None = None) -> pd.DataFrame:
-    """Fetch Basketball-Reference advanced stats using cached HTML parsing.
-
-    Basketball-Reference can rate-limit scraping. On failure this returns an
-    empty DataFrame so the app can fall back to sample data.
-    """
     try:
         import requests_cache
-        import requests
     except Exception:
         return pd.DataFrame()
 

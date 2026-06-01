@@ -1,11 +1,8 @@
 from __future__ import annotations
 
-from pathlib import Path
-from typing import Dict, List, Tuple
-
 import pandas as pd
 
-from src.config import TEAM_IDS, TEAM_FULL_NAMES, SAMPLE_PLAYER_NAMES, SEASON, SEASON_TYPE
+from src.config import TEAM_IDS, SEASON, SEASON_TYPE
 from src.metrics.derived_metrics import normalize_percentile
 
 
@@ -44,11 +41,6 @@ def _nba_headers() -> dict:
 
 
 def fetch_team_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> pd.DataFrame:
-    """Fetches team-level ratings from NBA.com/stats through nba_api.
-
-    Returns the dashboard's standardized `team_stats` shape.
-    Falls back to an empty DataFrame if the request fails.
-    """
     try:
         from nba_api.stats.endpoints import leaguedashteamstats
     except Exception:
@@ -84,6 +76,7 @@ def fetch_team_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> pd
 
     team_ids = set(TEAM_IDS.values())
     adv = adv[adv["TEAM_ID"].isin(team_ids)].copy()
+
     if not four.empty and "TEAM_ID" in four.columns:
         four = four[four["TEAM_ID"].isin(team_ids)].copy()
         merged = adv.merge(four, on=["TEAM_ID", "TEAM_NAME"], how="left", suffixes=("", "_FOUR"))
@@ -124,7 +117,6 @@ def fetch_team_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> pd
 
 
 def fetch_player_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> pd.DataFrame:
-    """Fetches player stats from NBA.com/stats and standardizes for the dashboard."""
     try:
         from nba_api.stats.endpoints import leaguedashplayerstats
     except Exception:
@@ -158,6 +150,7 @@ def fetch_player_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> 
 
     team_ids = set(TEAM_IDS.values())
     base = base[base["TEAM_ID"].isin(team_ids)].copy()
+
     if not advanced.empty and "PLAYER_ID" in advanced.columns:
         keep_cols = [
             col for col in ["PLAYER_ID", "TS_PCT", "USG_PCT", "AST_PCT", "REB_PCT", "TOV_PCT", "NET_RATING"]
@@ -168,17 +161,24 @@ def fetch_player_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> 
     rows = []
     for _, row in base.iterrows():
         team_name = next((name for name, tid in TEAM_IDS.items() if tid == row["TEAM_ID"]), row.get("TEAM_ABBREVIATION", "Unknown"))
+        usg = float(_pick(row, "USG_PCT", default=0))
+        if usg <= 1:
+            usg *= 100
+
         rows.append(
             {
                 "player": row.get("PLAYER_NAME", ""),
                 "team": team_name,
+                "position": "",
+                "status": "Live roster",
                 "role": "Rotation player",
                 "pts": float(_pick(row, "PTS", default=0)),
                 "ast": float(_pick(row, "AST", default=0)),
                 "reb": float(_pick(row, "REB", default=0)),
+                "min": float(_pick(row, "MIN", default=0)),
                 "per": 0.0,
                 "ts_pct": float(_pick(row, "TS_PCT", default=0)),
-                "usg_pct": float(_pick(row, "USG_PCT", default=0)) * 100 if _pick(row, "USG_PCT", default=0) <= 1 else float(_pick(row, "USG_PCT", default=0)),
+                "usg_pct": usg,
                 "bpm": 0.0,
                 "vorp": 0.0,
                 "ws48": 0.0,
@@ -190,21 +190,10 @@ def fetch_player_stats(season: str = SEASON, season_type: str = SEASON_TYPE) -> 
     if output.empty:
         return output
 
-    # Keep likely rotation players using minutes, but do not over-filter if data is sparse.
-    if "MIN" in base.columns:
-        mins = base[["PLAYER_NAME", "MIN"]].rename(columns={"PLAYER_NAME": "player"})
-        output = output.merge(mins, on="player", how="left")
-        output = output.sort_values(["team", "MIN"], ascending=[True, False]).groupby("team").head(10)
-        output = output.drop(columns=["MIN"])
-
-    return output.reset_index(drop=True)
+    return output.sort_values(["team", "min"], ascending=[True, False]).groupby("team").head(14).reset_index(drop=True)
 
 
 def fetch_lineups(season: str = SEASON, season_type: str = SEASON_TYPE, group_quantity: int = 5) -> pd.DataFrame:
-    """Fetches lineup data from NBA.com/stats.
-
-    Returns the dashboard's standardized `lineups` shape.
-    """
     try:
         from nba_api.stats.endpoints import leaguedashlineups
     except Exception:
@@ -251,11 +240,6 @@ def fetch_lineups(season: str = SEASON, season_type: str = SEASON_TYPE, group_qu
 
 
 def fetch_shot_zones(players_df: pd.DataFrame, season: str = SEASON, season_type: str = SEASON_TYPE) -> pd.DataFrame:
-    """Fetches and summarizes NBA ShotChartDetail data by player and shot zone.
-
-    This can be slow and may be blocked in cloud environments, so failures return
-    an empty DataFrame for graceful fallback.
-    """
     try:
         from nba_api.stats.endpoints import shotchartdetail
     except Exception:
@@ -266,7 +250,7 @@ def fetch_shot_zones(players_df: pd.DataFrame, season: str = SEASON, season_type
 
     rows = []
 
-    for _, player_row in players_df.head(12).iterrows():
+    for _, player_row in players_df.head(16).iterrows():
         player_id = player_row.get("player_id")
         if pd.isna(player_id):
             continue
@@ -326,12 +310,6 @@ def fetch_shot_zones(players_df: pd.DataFrame, season: str = SEASON, season_type
 
 
 def fetch_synergy_pnr(season: str = SEASON, season_type: str = SEASON_TYPE) -> pd.DataFrame:
-    """Attempts to fetch Synergy play-type data for PnR ball handler / roll man.
-
-    Public data usually does not expose true defensive coverage labels. This returns
-    player/team play-type efficiency when available. Duo construction still needs
-    pass or lineup enrichment, so the pipeline may fall back to sample PnR data.
-    """
     try:
         from nba_api.stats.endpoints import synergyplaytypes
     except Exception:

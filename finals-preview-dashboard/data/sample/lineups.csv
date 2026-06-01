@@ -1,5 +1,9 @@
 lineup,team,min,ortg,drtg,net_rating,efg_pct,tov_pct,reb_pct,plus_minus
-Brunson-Hart-Anunoby-Randle-Robinson,Knicks,450,122.5,110.1,12.4,0.570,0.113,0.548,186
-Brunson-McBride-Anunoby-Hart-Robinson,Knicks,156,119.3,104.2,15.1,0.552,0.106,0.563,74
-Paul-Vassell-Sochan-Wembanyama-Collins,Spurs,380,118.9,109.1,9.8,0.558,0.126,0.512,141
-Paul-Vassell-Castle-Sochan-Wembanyama,Spurs,204,120.1,108.3,11.8,0.566,0.118,0.524,88
+Brunson-Bridges-Anunoby-Hart-Towns,Knicks,510,123.0,111.0,12.0,0.575,0.111,0.532,192
+Brunson-Bridges-Anunoby-Towns-Robinson,Knicks,184,120.8,106.6,14.2,0.558,0.116,0.566,88
+Brunson-Hart-Anunoby-Achiuwa-Towns,Knicks,160,118.4,109.9,8.5,0.548,0.119,0.542,51
+Kolek-Bridges-Anunoby-Achiuwa-Robinson,Knicks,86,113.5,108.0,5.5,0.530,0.126,0.558,21
+Fox-Castle-Vassell-Barnes-Wembanyama,Spurs,460,121.1,109.5,11.6,0.566,0.121,0.519,171
+Fox-Castle-Harper-Vassell-Wembanyama,Spurs,210,123.6,111.8,11.8,0.572,0.128,0.508,86
+Castle-Harper-Champagnie-Barnes-Wembanyama,Spurs,155,118.2,107.9,10.3,0.554,0.132,0.515,58
+Fox-Vassell-Johnson-Olynyk-Wembanyama,Spurs,118,119.0,112.2,6.8,0.559,0.135,0.503,33

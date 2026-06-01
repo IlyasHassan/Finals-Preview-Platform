@@ -3,9 +3,7 @@ import json
 import time
 from typing import Any
 
-import requests
 import requests_cache
-
 
 DEFAULT_HEADERS = {
     "User-Agent": (
@@ -32,7 +30,7 @@ def fetch_json(url: str, params: dict | None = None, timeout: int = 20, sleep_se
     return response.json()
 
 
-def save_json(payload: dict, path: str | Path) -> None:
+def save_json(payload: dict, path) -> None:
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")

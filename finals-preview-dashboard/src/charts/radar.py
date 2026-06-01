@@ -30,21 +30,22 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
                 theta=categories + [categories[0]],
                 fill="toself",
                 name=row["team"],
+                opacity=0.72,
             )
         )
 
     fig.update_layout(
         polar=dict(
-            radialaxis=dict(
-                visible=True,
-                range=[0, 100],
-                tickfont=dict(size=10),
-            )
+            bgcolor="#0B0D10",
+            radialaxis=dict(visible=True, range=[0, 100], gridcolor="#2C3340"),
+            angularaxis=dict(gridcolor="#2C3340"),
         ),
         showlegend=True,
         template="plotly_dark",
+        height=430,
+        margin=dict(l=30, r=30, t=55, b=30),
         title="Team Strength Profile, Percentile Rank",
-        margin=dict(l=40, r=40, t=60, b=40),
+        legend=dict(orientation="h", yanchor="bottom", y=-0.15, xanchor="center", x=0.5),
     )
 
     return fig
