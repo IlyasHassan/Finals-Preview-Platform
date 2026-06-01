@@ -1,10 +1,23 @@
 # 2026 NBA Finals: Knicks vs. Spurs Preview Platform
 
-This is a working Streamlit MVP for a Knicks vs. Spurs NBA Finals scouting dashboard.
+This is a Streamlit dashboard for a Knicks vs. Spurs NBA Finals scouting preview.
 
-## Important data note
+## Batch 2 update
 
-This first version uses static sample/proxy data so the app runs immediately. The live NBA.com/stats, Basketball-Reference, and PBPStats ingestion layer should be added in Batch 2.
+This version adds a live-ingestion layer with safe fallback behavior.
+
+The app has two modes:
+
+1. **Sample data mode**  
+   Guaranteed to work. Uses the CSV files in `data/sample`.
+
+2. **Live-first mode**  
+   Attempts to pull live/current data from:
+   - NBA.com/stats via `nba_api`
+   - Basketball-Reference through cached HTML table parsing
+   - PBPStats through a lightweight API client scaffold
+
+If any source fails, the app falls back to the sample CSVs so the deployed website stays online.
 
 ## Local setup
 
@@ -38,11 +51,21 @@ streamlit run app.py
 
 ## Deploy to Streamlit Community Cloud
 
-1. Create a GitHub repository named `finals-preview-dashboard`.
-2. Upload all files in this folder.
-3. Go to Streamlit Community Cloud.
-4. Choose **New app**.
-5. Connect the GitHub repository.
-6. Set the main file path to `app.py`.
-7. Click **Deploy**.
-8. Streamlit will generate a public link.
+If the repository root contains `app.py`, use:
+
+```text
+app.py
+```
+
+If the app is inside a nested folder called `finals-preview-dashboard`, use:
+
+```text
+finals-preview-dashboard/app.py
+```
+
+## Data limitations
+
+Public NBA data access can be inconsistent in cloud environments. NBA.com/stats may throttle or block requests. Basketball-Reference may rate-limit scraping. PBPStats endpoint availability can change.
+
+This project is designed to degrade gracefully:
+live source fails -> cached file if available -> sample data fallback.

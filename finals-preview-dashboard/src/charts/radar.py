@@ -16,12 +16,12 @@ def plot_team_radar(df: pd.DataFrame) -> go.Figure:
 
     for _, row in df.iterrows():
         values = [
-            row["off_rank"],
-            row["def_rank"],
-            row["reb_rank"],
-            row["trans_rank"],
-            row["rim_rank"],
-            row["perimeter_rank"],
+            row.get("off_rank", 50),
+            row.get("def_rank", 50),
+            row.get("reb_rank", 50),
+            row.get("trans_rank", 50),
+            row.get("rim_rank", 50),
+            row.get("perimeter_rank", 50),
         ]
 
         fig.add_trace(

@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Dict
 import pandas as pd
 
 REQUIRED_FILES = {
@@ -15,16 +16,12 @@ def get_project_root() -> Path:
     return Path(__file__).resolve().parents[2]
 
 
-def load_all_sample_data(base_path: str | Path | None = None) -> dict[str, pd.DataFrame]:
-    if base_path is None:
-        base_path = get_project_root() / "data" / "sample"
-    else:
-        base_path = Path(base_path)
-
+def load_table_set(base_path: str | Path, required_files: dict = REQUIRED_FILES) -> Dict[str, pd.DataFrame]:
+    base_path = Path(base_path)
     data = {}
     missing = []
 
-    for key, filename in REQUIRED_FILES.items():
+    for key, filename in required_files.items():
         path = base_path / filename
         if not path.exists():
             missing.append(str(path))
@@ -33,7 +30,23 @@ def load_all_sample_data(base_path: str | Path | None = None) -> dict[str, pd.Da
 
     if missing:
         raise FileNotFoundError(
-            "Missing required sample data files:\n" + "\n".join(missing)
+            "Missing required data files:\n" + "\n".join(missing)
         )
 
     return data
+
+
+def load_all_sample_data(base_path: str | Path | None = None) -> Dict[str, pd.DataFrame]:
+    if base_path is None:
+        base_path = get_project_root() / "data" / "sample"
+    return load_table_set(base_path)
+
+
+def load_live_snapshot_or_sample() -> Dict[str, pd.DataFrame]:
+    root = get_project_root()
+    live_path = root / "data" / "live"
+
+    try:
+        return load_table_set(live_path)
+    except Exception:
+        return load_all_sample_data()

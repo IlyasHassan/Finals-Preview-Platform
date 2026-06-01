@@ -27,6 +27,7 @@ def draw_half_court(shot_df: pd.DataFrame) -> go.Figure:
     )
 
     if not shot_df.empty:
+        marker_size = shot_df.get("shot_volume", pd.Series([12] * len(shot_df))).clip(lower=8, upper=24)
         fig.add_trace(
             go.Scatter(
                 x=shot_df["loc_x"],
@@ -35,7 +36,7 @@ def draw_half_court(shot_df: pd.DataFrame) -> go.Figure:
                 text=shot_df["zone"],
                 textposition="top center",
                 marker=dict(
-                    size=shot_df["shot_volume"].clip(lower=8, upper=24),
+                    size=marker_size,
                     color=shot_df["fg_pct"],
                     colorscale="RdYlGn",
                     cmin=0.30,

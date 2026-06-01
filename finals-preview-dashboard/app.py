@@ -2,22 +2,49 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 
-from src.utils.load_data import load_all_sample_data
+from src.config import SEASON, SEASON_TYPE
+from src.ingest.live_pipeline import build_dataset
 from src.charts.radar import plot_team_radar
 from src.charts.court import draw_half_court
 from src.metrics.derived_metrics import calculate_pnr_duo_score, add_zone_labels
 
 st.set_page_config(page_title="2026 NBA Finals Scouting Room", layout="wide")
 
-@st.cache_data
-def load_data():
-    return load_all_sample_data()
 
-data = load_data()
+@st.cache_data(ttl=60 * 60, show_spinner=False)
+def load_dashboard_data(data_mode: str, season: str, season_type: str):
+    prefer_live = data_mode == "Live-first + sample fallback"
+    return build_dataset(prefer_live=prefer_live, season=season, season_type=season_type)
+
 
 st.sidebar.title("2026 NBA Finals")
 st.sidebar.markdown("**Knicks vs. Spurs**")
-st.sidebar.caption("Batch 1: static sample-data MVP")
+
+data_mode = st.sidebar.radio(
+    "Data mode",
+    ["Sample data", "Live-first + sample fallback"],
+    index=0,
+    help=(
+        "Sample data is guaranteed to work. Live-first mode attempts NBA.com/stats, "
+        "Basketball-Reference, and PBPStats, then falls back to sample data if a source fails."
+    ),
+)
+
+season = st.sidebar.text_input("Season", value=SEASON)
+season_type = st.sidebar.selectbox(
+    "Season type",
+    ["Regular Season", "Playoffs"],
+    index=0 if SEASON_TYPE == "Regular Season" else 1,
+)
+
+if st.sidebar.button("Clear cached data and rerun"):
+    st.cache_data.clear()
+    st.rerun()
+
+with st.spinner("Loading dashboard data..."):
+    data, source_manifest = load_dashboard_data(data_mode, season, season_type)
+
+st.sidebar.caption(f"Mode: {data_mode}")
 
 page = st.sidebar.radio(
     "Navigate",
@@ -35,12 +62,16 @@ page = st.sidebar.radio(
 
 if page == "Overview":
     st.title("Series Overview: Knicks vs. Spurs")
-    st.caption("Static sample-data MVP. Replace with live ingestion in Batch 2.")
+
+    if data_mode == "Sample data":
+        st.info("Sample mode is active. Switch to live-first mode in the sidebar to attempt live ingestion.")
+    else:
+        st.info("Live-first mode is active. Any blocked or failed source falls back to sample data.")
 
     team_stats = data["team_stats"]
 
-    knicks = team_stats[team_stats["team"] == "Knicks"].iloc[0]
-    spurs = team_stats[team_stats["team"] == "Spurs"].iloc[0]
+    knicks = team_stats[team_stats["team"] == "Knicks"].iloc[0] if "Knicks" in set(team_stats["team"]) else team_stats.iloc[0]
+    spurs = team_stats[team_stats["team"] == "Spurs"].iloc[0] if "Spurs" in set(team_stats["team"]) else team_stats.iloc[-1]
 
     col1, col2, col3, col4 = st.columns(4)
     col1.metric("Knicks Net Rating", f"{knicks['net_rating']:+.1f}")
@@ -86,8 +117,8 @@ elif page == "Players":
     player_stats = data["player_stats"].sort_values(by="per", ascending=False)
     team_filter = st.multiselect(
         "Filter by team",
-        options=sorted(player_stats["team"].unique()),
-        default=sorted(player_stats["team"].unique()),
+        options=sorted(player_stats["team"].dropna().unique()),
+        default=sorted(player_stats["team"].dropna().unique()),
     )
     filtered = player_stats[player_stats["team"].isin(team_filter)]
 
@@ -108,7 +139,7 @@ elif page == "Shot Zones":
     st.title("Shot Zones and Efficiency")
 
     shot_zones = add_zone_labels(data["shot_zones"])
-    players = sorted(shot_zones["player"].unique())
+    players = sorted(shot_zones["player"].dropna().unique())
     player = st.selectbox("Select player", players)
 
     player_shots = shot_zones[shot_zones["player"] == player].copy()
@@ -125,16 +156,17 @@ elif page == "Shot Zones":
             use_container_width=True,
         )
 
-        best_zone = player_shots.sort_values("efg_pct", ascending=False).iloc[0]
-        worst_zone = player_shots.sort_values("efg_pct", ascending=True).iloc[0]
-        st.metric("Best Zone by eFG%", best_zone["zone"], f"{best_zone['efg_pct']:.1%}")
-        st.metric("Worst Zone by eFG%", worst_zone["zone"], f"{worst_zone['efg_pct']:.1%}")
+        if not player_shots.empty:
+            best_zone = player_shots.sort_values("efg_pct", ascending=False).iloc[0]
+            worst_zone = player_shots.sort_values("efg_pct", ascending=True).iloc[0]
+            st.metric("Best Zone by eFG%", best_zone["zone"], f"{best_zone['efg_pct']:.1%}")
+            st.metric("Worst Zone by eFG%", worst_zone["zone"], f"{worst_zone['efg_pct']:.1%}")
 
 elif page == "Pick-and-Roll":
     st.title("Pick-and-Roll Dashboard")
 
     pnr = data["pnr_duos"].copy()
-    pnr["duo"] = pnr["ball_handler"] + " + " + pnr["screener"]
+    pnr["duo"] = pnr["ball_handler"].astype(str) + " + " + pnr["screener"].astype(str)
     pnr["duo_score"] = pnr.apply(calculate_pnr_duo_score, axis=1)
 
     st.dataframe(
@@ -155,8 +187,9 @@ elif page == "Pick-and-Roll":
     fig.update_traces(textposition="top center")
     st.plotly_chart(fig, use_container_width=True)
 
-    st.info(
-        "Coverage labels in Batch 1 are proxy notes only. Live coverage inference should be built in Batch 2 using possession-level and matchup data."
+    st.warning(
+        "Public data generally does not expose true coverage labels like drop, switch, hedge, blitz, or ICE. "
+        "This page uses play-type efficiency and proxy notes unless deeper charting data is added."
     )
 
 elif page == "Lineups":
@@ -194,48 +227,54 @@ elif page == "Matchups":
 elif page == "Methods & Sources":
     st.title("Methods & Sources")
 
+    st.subheader("Current Data Status")
+    st.dataframe(source_manifest, use_container_width=True)
+
     methods = pd.DataFrame(
         [
             {
                 "Metric": "ORTG, DRTG, Net Rating, Four Factors",
-                "Intended Source": "NBA.com/stats",
-                "Batch 1 Status": "Sample/proxy",
+                "Intended Source": "NBA.com/stats via nba_api",
+                "Current Behavior": "Live-first if selected, otherwise sample CSV",
                 "Type": "Official when live",
             },
             {
                 "Metric": "PER, BPM, VORP, WS/48",
                 "Intended Source": "Basketball-Reference",
-                "Batch 1 Status": "Sample/proxy",
+                "Current Behavior": "Merged into player table when scrape succeeds",
                 "Type": "Scraped/reference when live",
             },
             {
                 "Metric": "Shot Coordinates and Shot Zones",
                 "Intended Source": "NBA ShotChartDetail",
-                "Batch 1 Status": "Sample/proxy",
+                "Current Behavior": "Summarized by player/zone when request succeeds",
                 "Type": "Official when live",
             },
             {
                 "Metric": "PnR Duo Score",
-                "Intended Source": "NBA.com/stats + PBPStats",
-                "Batch 1 Status": "Derived from sample data",
+                "Intended Source": "NBA SynergyPlayTypes + PBPStats enrichment",
+                "Current Behavior": "Attempts Synergy play-type rows; exact duo fallback remains sample/proxy",
                 "Type": "Derived/internal",
             },
             {
                 "Metric": "Coverage Labels",
                 "Intended Source": "No clean public direct source",
-                "Batch 1 Status": "Proxy/caveat only",
+                "Current Behavior": "Proxy/caveat only",
                 "Type": "Proxy/inferred",
             },
             {
                 "Metric": "Lineups and On/Off",
                 "Intended Source": "NBA.com/stats + PBPStats",
-                "Batch 1 Status": "Sample/proxy",
+                "Current Behavior": "Attempts NBA lineup endpoint, optional PBPStats enrichment",
                 "Type": "Official/derived when live",
             },
         ]
     )
 
+    st.subheader("Metric Source Manifest")
     st.dataframe(methods, use_container_width=True)
-    st.warning(
-        "This MVP is built with static sample data. Do not treat the numbers as final scouting data until Batch 2 live ingestion is implemented."
+
+    st.info(
+        "Batch 2 adds live ingestion scaffolding and graceful fallbacks. "
+        "For production-grade tactical coverage labels, you still need hand-charted data, Second Spectrum/Synergy access, or a validated possession-level classifier."
     )
