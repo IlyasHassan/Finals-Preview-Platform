@@ -32,20 +32,21 @@ from scripts.common_snapshot import (
 def atomic_replace_snapshot(temp_dir: Path, include_shotcharts: bool):
     SNAPSHOT_DIR.mkdir(parents=True, exist_ok=True)
 
-    # Copy only files created in the temp build. This preserves existing shot_zones
-    # if the user is rebuilding core with --skip-shotcharts.
     for file_path in temp_dir.glob("*"):
-        if file_path.is_file():
-            if file_path.name == "shot_zones.csv" or include_shotcharts:
-                shutil.copy2(file_path, SNAPSHOT_DIR / file_path.name)
-            elif file_path.name != "shot_zones.csv":
-                shutil.copy2(file_path, SNAPSHOT_DIR / file_path.name)
+        if not file_path.is_file():
+            continue
+
+        if file_path.name == "shot_zones.csv" and not include_shotcharts:
+            continue
+
+        shutil.copy2(file_path, SNAPSHOT_DIR / file_path.name)
 
 
-def build_core(args, temp_dir: Path, status_rows: list, errors: list):
+def build_core(args, temp_dir: Path, status_rows: list, errors: list) -> pd.DataFrame:
     roster, espn_teams, espn_rosters, status = fetch_roster_with_espn_backup(args.season)
     status_rows.extend(status)
     validate_non_empty("roster", roster, errors)
+
     write_table(roster, temp_dir, "roster.csv")
     write_table(espn_teams, temp_dir, "espn_teams.csv")
     write_table(espn_rosters, temp_dir, "espn_rosters.csv")
@@ -58,34 +59,62 @@ def build_core(args, temp_dir: Path, status_rows: list, errors: list):
     player_stats, status = fetch_player_stats(args.season, args.season_type, roster)
     status_rows.extend(status)
     validate_non_empty("player_stats", player_stats, errors)
-
-    bref, status = fetch_bref_advanced(args.season)
-    status_rows.extend(status)
-    if not bref.empty:
-        player_stats = merge_bref(player_stats, bref)
-
     write_table(player_stats, temp_dir, "player_stats.csv")
 
     lineups, status = fetch_lineups(args.season, args.season_type)
     status_rows.extend(status)
     if lineups.empty:
-        status_rows.append(("lineups_validation", "Builder", "Warning", "Lineups empty. Core build continues, but Lineups page will be empty."))
+        status_rows.append(
+            (
+                "lineups_validation",
+                "Builder",
+                "Warning",
+                "Lineups empty. Core build continues, but Lineups page will be empty because NBA.com/stats timed out.",
+            )
+        )
     write_table(
         lineups,
         temp_dir,
         "lineups.csv",
-        columns=["lineup", "team", "min", "ortg", "drtg", "net_rating", "efg_pct", "tov_pct", "reb_pct", "plus_minus"],
+        columns=[
+            "lineup",
+            "team",
+            "min",
+            "ortg",
+            "drtg",
+            "net_rating",
+            "efg_pct",
+            "tov_pct",
+            "reb_pct",
+            "plus_minus",
+        ],
     )
 
     pnr, status = fetch_pnr_play_types(args.season, args.season_type)
     status_rows.extend(status)
     if pnr.empty:
-        status_rows.append(("pnr_validation", "Builder", "Warning", "PnR play-type table empty. Core build continues, but PnR page will be empty."))
+        status_rows.append(
+            (
+                "pnr_validation",
+                "Builder",
+                "Warning",
+                "PnR play-type table empty. Core build continues, but PnR page will be empty because NBA.com/stats/Synergy timed out.",
+            )
+        )
     write_table(
         pnr,
         temp_dir,
         "pnr_play_types.csv",
-        columns=["team", "player", "play_type", "possessions", "ppp", "percentile", "tov_pct", "score_freq"],
+        columns=[
+            "team",
+            "player",
+            "play_type",
+            "possessions",
+            "ppp",
+            "percentile",
+            "tov_pct",
+            "score_freq",
+        ],
     )
 
     matchups, status = empty_matchups()
@@ -113,13 +142,27 @@ def build_shotcharts(args, temp_dir: Path, player_stats: pd.DataFrame, status_ro
     status_rows.extend(status)
 
     if shot_zones.empty:
-        errors.append("shot_zones is empty. ShotChartDetail failed for all selected players.")
+        errors.append(
+            "shot_zones is empty. NBA ShotChartDetail and Basketball-Reference Shooting both failed or returned no selected rows."
+        )
 
     write_table(
         shot_zones,
         temp_dir,
         "shot_zones.csv",
-        columns=["player_id", "player", "team", "zone", "loc_x", "loc_y", "fg_pct", "efg_pct", "shot_volume", "volume_rank"],
+        columns=[
+            "player_id",
+            "player",
+            "team",
+            "zone",
+            "loc_x",
+            "loc_y",
+            "fg_pct",
+            "efg_pct",
+            "shot_volume",
+            "volume_rank",
+            "primary_source",
+        ],
     )
 
 
@@ -129,8 +172,11 @@ def main():
     parser.add_argument("--season-type", default="Regular Season")
     parser.add_argument("--skip-shotcharts", action="store_true", help="Build core tables only. Fastest option.")
     parser.add_argument("--only-shotcharts", action="store_true", help="Only build shot_zones.csv using existing player_stats.csv.")
-    parser.add_argument("--max-shotchart-players", type=int, default=6, help="Players per team for shot chart pulls.")
+    parser.add_argument("--max-shotchart-players", type=int, default=6, help="Players per team for shot-chart pulls or B-Ref shooting zones.")
     args = parser.parse_args()
+
+    if args.skip_shotcharts and args.only_shotcharts:
+        raise SystemExit("Use either --skip-shotcharts or --only-shotcharts, not both.")
 
     reset_attempt_dir()
 
@@ -145,6 +191,7 @@ def main():
         player_stats = build_core(args, temp_dir, status_rows, errors)
 
     include_shotcharts = not args.skip_shotcharts
+
     if include_shotcharts:
         build_shotcharts(args, temp_dir, player_stats, status_rows, errors)
 
@@ -172,20 +219,20 @@ def main():
 
     if errors:
         write_error_log(errors)
-        print("\\nSnapshot build failed. Existing data/snapshot was NOT overwritten.")
-        print("\\nErrors:")
+        print("\nSnapshot build failed. Existing data/snapshot was NOT overwritten.")
+        print("\nErrors:")
         for error in errors:
             print(f"- {error}")
-        print("\\nSee:")
+        print("\nSee:")
         print("- data/raw/latest_build_attempt/source_manifest.csv")
         print("- data/raw/latest_build_attempt/build_errors.txt")
         raise SystemExit(1)
 
     atomic_replace_snapshot(temp_dir, include_shotcharts=include_shotcharts)
 
-    print("\\nSnapshot build complete.")
+    print("\nSnapshot build complete.")
     print(f"Saved to: {SNAPSHOT_DIR.resolve()}")
-    print("\\nSource manifest:")
+    print("\nSource manifest:")
     print(manifest.to_string(index=False))
 
 

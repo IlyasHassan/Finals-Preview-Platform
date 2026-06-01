@@ -125,3 +125,27 @@ This version fixes that:
 - SynergyPlayTypes now uses the corrected `player_or_team_abbreviation` parameter, with a fallback for older nba_api versions.
 
 This is not fake fallback data. It is an alternate real source.
+
+
+## Version 4.1 fix
+
+This patch fixes the `NameError` in `scripts/build_snapshot.py`.
+
+The build script now correctly lets `fetch_player_stats()` handle the source hierarchy internally:
+
+```text
+NBA.com/stats player stats
+→ if unavailable, Basketball-Reference Per Game + Advanced
+```
+
+Use:
+
+```bash
+python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --skip-shotcharts
+```
+
+Then:
+
+```bash
+python scripts/build_snapshot.py --season 2025-26 --season-type "Regular Season" --only-shotcharts --max-shotchart-players 6
+```

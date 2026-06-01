@@ -1,1 +1,0 @@
-Cannot build shot charts because player_stats.csv is missing or empty.
