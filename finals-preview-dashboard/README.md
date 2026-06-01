@@ -110,3 +110,18 @@ data/snapshot/espn_rosters.csv
 ```
 
 ESPN is used as a real backup for roster/team metadata only. It is not a substitute for NBA.com/stats shot charts, lineups, Synergy play types, or Basketball-Reference advanced metrics.
+
+
+## Version 4: Basketball-Reference core backup
+
+Your diagnosis showed that `stats.nba.com` timed out for `LeagueDashTeamStats`, `LeagueDashPlayerStats`, `LeagueDashLineups`, and NBA roster endpoints, while ESPN and Basketball-Reference loaded successfully.
+
+This version fixes that:
+
+- If NBA.com/stats team stats fail, `team_stats.csv` is built from Basketball-Reference's league Miscellaneous Stats table.
+- If NBA.com/stats player stats fail, `player_stats.csv` is built from Basketball-Reference Per Game + Advanced tables.
+- ESPN remains the roster/team metadata backup.
+- If NBA ShotChartDetail fails or NBA player IDs are missing, `shot_zones.csv` is built from Basketball-Reference Shooting distance zones.
+- SynergyPlayTypes now uses the corrected `player_or_team_abbreviation` parameter, with a fallback for older nba_api versions.
+
+This is not fake fallback data. It is an alternate real source.

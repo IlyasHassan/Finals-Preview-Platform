@@ -21,8 +21,6 @@ from scripts.common_snapshot import (
     fetch_roster_with_espn_backup,
     fetch_team_stats,
     fetch_player_stats,
-    fetch_bref_advanced,
-    merge_bref,
     fetch_lineups,
     fetch_pnr_play_types,
     fetch_shot_zones,
